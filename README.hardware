@@ -1,4 +1,4 @@
-        XILINX Zynq-7000 AP Board Support Package
+        XILINX ZYNQ Board Support Package
 
 
 Table of Contents
@@ -17,26 +17,22 @@ This BSP supports the following boards:
   + XILINX ZYNQ ZC706 Board  : XC7Z045 processor, Rev 1.2 board.
   + XILINX ZYNQ ZC702 Board  : XC7Z020 processor, Rev 1.1 board.
   + Avnet Microzed Board     : XC7Z010 processor, Rev F01 board.
-  + Avnet Mini-ITX Board     : XC7Z045 processor, Mini-ITX-7Z-PCB-E, REV C
   + Avnet Picozed board      : XC7Z030/20/15/10 processor, REV C
+  + Avnet Mini-ITX Board     : XC7Z045 processor, Mini-ITX-7Z-PCB-E, REV C
 
 
 2. Change History
 =================
 
-  - 2015/09 (US65230): Wind River Linux 7.0 RCPL09, update latest PCIe driver
-                       Based on mainline v3.18.
+  - 2016/01 (US72961) : Add a basic CGL kernel type support.
 
-  - 2015/01 (US42598) 
-	Wind River Linux 7.0 Async: Initial standard and preempt-rt support
-	for Mini-ITX, ZC702, ZC706, and Microzed board support
+  - 2015/12 (US70518) : Wind River Linux 8.0 ASYNC RCPL1: standard and preempt-rt
+			support for Microzed, Picozed, Mini-ITX.
+			Based on the latest Xilinx git repo.
 
-  - 2015/01 (US42598)
-	Wind River Linux 7.0 Async: Add multimedia support for the u-boot embedded
-	with the related bit stream for PL.
-
-  - 2015/03 (US42598)
-	Wind River Linux 7.0 Async: Add Picozed board support
+  - 2015/12 (US64302) : Wind River Linux 8.0: standard and preempt-rt support
+			for ZC702 and ZC706.
+			Based on the latest Xilinx git repo.
 
 
 3. BSP Features
@@ -49,52 +45,46 @@ The following BSP features are validated and supported on boards where
 the corresponding h/w features exist.
 
   o General Platform
+	+ Coresight
 	+ KGDBoC
-	+ Oprofile
+	+ CortexA9 Global timer
 
   o Bus
 	+ I2C: On-Chip I2C controller
 	+ QSPI: On-Chip Quad-SPI flash controller
 	+ SPI: On-Chip SPI controller
-	+ PCIe: On-Chip PCIe controller (Mini-ITX)
+	+ PCIe: On-Chip PCIe controller (Mini-ITX, PL)
+
+  o Multimedia (PL)
+	+ DRM Graphic: Xylon logiCVC video controller
+	+ HDMI: ADV7511 HDMI transmitter
+	+ XADC: On-Chip analog-to-digital converter
 
   o Network
 	+ GEM: On-Chip Gigabit Ethernet Controller
 	+ PHY: Marvell 88E1116R (ZC702, ZC706), 88e1510(Mini-ITX) and 88E1512 (Microzed)
+	+ IEEE 1588 PTP (ZC706, Picozed excluded)
 
   o Storage
 	+ NOR Flash:
 		+ QSPI NOR Flash: Micron/Numonyx N25Q128A, 128Mb (ZC702)
-		+ QSPI NOR Flash: Spansion S25FL128S, 128Mb (ZC706, Microzed)
-		+ QSPI NOR Flash: Spansion s25FL129P1, 256Mb (Mini-ITX)
+		+ QSPI NOR Flash: Spansion S25FL128S, 128Mb (ZC706, Picozed, Mini-ITX)
 	+ SD/MMC: On-Chip SD peripheral controller
 
   o USB
 	+ USB Host: On-Chip USB 2.0 EHCI Host Controller
-	+ USB Gadget: On-Chip USB 2.0 High Speed Device (ZC702, ZC706 only)
-	+ USB OTG: USB 2.0 High Speed On-The-Go dual-role
-		   USB Host controller (ZC702, ZC706 only)
-
-  o Multimedia:
-	+ Graphic: Xylon logiCVC video controller (ZC702)
-        + AUDIO:
-                + HDMI codec (ZC702, Mini-ITX)
-                + ADAU1761 codec(Mini-ITX)
 
   o Power Mgmt
 	+ CPU hotplug
 	+ CPU IDLE: WFI mode (wait for interrupt mode) and RAM Self Refresh
-	+ Suspend to RAM (mini-itx)
 
   o Misc Devices
-	+ CLKGEN: Si570 Clock Generator, I2C chip (ZC702, ZC706)
+	+ CLKGEN: Si570 Clock Generator, I2C chip
 	+ GPIO: On-Chip general purpose I/O peripheral
-	+ RTC: RTC-8564JE, I2C RTC chip (ZC702, ZC702), DS1337 (mini-itx)
+	+ RTC: RTC-8564JE, I2C RTC chip (ZC702, ZC706)
 	+ SWDT: On-Chip System Watchdog Timer
 	+ XADC: On-Chip analog-to-digital converter
-	+ HDMI: ADV7511 HDMI transmitter (ZC702, Mini-ITX)
 	+ UART: On-Chip UART
-	+ Silicon LIB SI570(ZC702 only)
 
 
 3.2 Unsupported Features
@@ -102,19 +92,12 @@ the corresponding h/w features exist.
 
 The following features are not supported and validated:
 
-  o Misc Devices
-	x Devices fanned out from PL other than some listed above.
-
   o Bus
-	x CAN (ZC702)
-
-3.3 Integrated and non-validated Features
-=========================================
-
-  o Multimedia
-	x DRM (ZC702)
-	x UIO (Mostly fanned out from PL)
-
+	x CAN (PL)
+	x SATA (PL)
+	x I2C (Mini-ITX, PL part)
+	x HDMI codec (Mini-ITX, PL)
+	x ADAU1761 codec(Mini-ITX only, PL)
 
 4. BSP Notes
 ============
@@ -133,21 +116,21 @@ For ZYNQ ZC706 board:
 	Processor:             ZYNQ XC7Z045
 	Board Revision:        HW-Z7-ZC706 REV 1.2
 	BootLoader:            U-Boot
-	BootLoader Version:    U-Boot 2013.07
+	BootLoader Version:    U-Boot 2014.01
 
 For ZYNQ ZC702 board:
 
 	Processor:             ZYNQ XC7Z020
-	Board Revision:        HW-Z7-ZC702 REV C
+	Board Revision:        HW-Z7-ZC702 REV 1.2
 	BootLoader:            U-Boot
-	BootLoader Version:    U-Boot 2014.01 (Jul 30 2014 - 15:00:11))
+	BootLoader Version:    U-Boot 2013.07
 
 For ZYNQ Microzed board:
 
 	Processor:             ZYNQ XC7Z010
 	Board Revision:        REV F01
 	BootLoader:            U-Boot
-	BootLoader Version:    U-Boot 2013.01
+	BootLoader Version:    U-Boot 2014.07
 
 For ZYNQ Mini-ITX board:
 
@@ -162,6 +145,8 @@ For ZYNQ Picozed board:
 	Board Revision:        CPU board: Rev C, Base board: MBCC-PZCC-PCB-C
 	BootLoader:            U-Boot
 	BootLoader Version:    U-Boot 2014.01-dirty (Sep 29 2014 - 09:07:05)
+
+
 
 4.1.2 Specify boot medium
 -------------------------
@@ -225,76 +210,12 @@ Shift SW16 setting to 00010 in order to boot from QSPI Flash:
 	SW16.5 = OFF
 
 
-4.1.2.3 Microzed REV F01
-------------------------
-
-The Microzed board provides jumpers(JP1, JP2 and JP3) to select
-the boot devices.
-
-1. Booting from SD card
-
-The jumper configuration for booting from SD card is:
-
-	JP3 2-3
-	JP2 2-3
-	JP1 1-2
-
-2. Booting from QSPI flash
-
-The jumper configuration for booting from the QSPI flash is:
-
-	JP3 2-3
-	JP2 1-2
-	JP1 1-2
-
-3. Booting from JTAG
-
-	JP3 1-2
-	JP2 1-2
-	JP1 1-2
-
-
-4.1.2.4 Mini-ITX-7Z-PCB-E
--------------------------
-
-In the default, Setting the jumper as the following:
-
-	JP1  1-2
-	JP7  3-4
-	JP12 1-2
-
-Note: PCIe needs JP12 set to 2-3.
-
-1. Booting from SD card
-
-The default SW7 setting (00110) specifies to boot from the SD card:
-
-	SW7.1 = OFF
-	SW7.2 = OFF
-	SW7.3 = ON
-	SW7.4 = ON
-	SW7.5 = OFF
-
-2. Booting from QSPI flash
-
-Shift SW7 setting to 00010 in order to boot from QSPI Flash:
-
-	SW7.1 = OFF
-	SW7.2 = OFF
-	SW7.3 = OFF
-	SW7.4 = ON
-	SW7.5 = OFF
-
-
 4.1.3 Jumper settings for various USB modes
 -------------------------------------------
 
 4.1.3.1 HW-Z7-ZC706 REV 1.2
 ---------------------------
 
-The USB interface on the ZC706 board supports the host, peripheral and otg
-modes, controlled by relevant jumper configurations illustrated below:
-
 For host mode:
 
 	J10 ON
@@ -302,30 +223,10 @@ For host mode:
 	J49 2-3
 	J50 2-3
 	J51 1-2
-
-For device mode:
-
-	J10 OFF
-	J48 1-2
-	J49 2-3
-	J50 2-3
-	J51 1-2
-
-For OTG mode:
-
-	J10 ON
-	J48 2-3
-	J49 1-2
-	J50 2-3
-	J51 1-2
-
 
 4.1.3.2 HW-Z7-ZC702 REV 1.1
 ---------------------------
 
-The USB interface on the ZC702 board supports the host, peripheral and otg
-modes, controlled by relevant jumper configurations illustrated below:
-
 For host mode:
 
 	J7 ON
@@ -334,32 +235,8 @@ For host mode:
 	J35 1-2
 	J36 1-2
 
-For device mode:
 
-	J7 OFF
-	J33 1-2
-	J34 2-3
-	J35 1-2
-	J36 1-2
-
-For OTG mode:
-
-	J7 ON
-	J33 2-3
-	J34 1-2
-	J35 1-2
-	J36 1-2
-
-
-4.1.4 Jumper settings for PCIE for the Mini-ITX board
------------------------------------------------------
-
-	JP1  1-2
-	JP7  3-4
-	JP12 2-3
-
-
-4.1.5 PL note:
+4.1.4 PL note:
 --------------
 The Zynq-7000 family is based on the Xilinx All Programmable SoC(AP SoC)
 architecture. These products integrate a dual-core ARM CortexA9 MPCore based
@@ -368,55 +245,38 @@ The ARM Cortex-A9 MPCore CPUs are the heart of the PS, and there is a related
 bit stream possibly by bootloader into PL catering for some specific apps.
 
 So it is very important to make sure the proper PL's code embedded-in for the
-related application testing.
+related application testing. And the features appended by "(PL)" mean that they
+fanned out from PL.
 
-
-4.1.6 Picozed cpu board(30/20/15/10) notes:
--------------------------------------------
-
-As described from PicoZed technical specifications, the main differences
-are user io port as follows:
-
-7Z010 Version
-  * 113 User I/O (100 PL, 13 PS MIO)
-  * PL I/O configurable as up to 48 LVDS pairs or 100 single-ended I/O
-7Z015 Version
-  * 148 User I/O (135 PL, 13 PS MIO)
-  * PL I/O configurable as up to 65 LVDS pairs or 135 single-ended I/O
-  * 4 GTP Transceivers
-7Z020 Version
-  * 138 User I/O (125 PL, 13 PS MIO)
-  * PL I/O configurable as up to 60 LVDS pairs or 125 single-ended I/O
-7Z030 Version
-  * 148 User I/O (135 PL, 13 PS MIO)
-  * PL I/O configurable as up to 65 LVDS pairs or 135 single-ended I/O
-  * 4 GTX Transceivers
-
-Please refer to technical specifications part in the following website
-for more information:
-
-  http://zedboard.org/product/picozed
-
-
-4.1.7 dtb notes:
+4.1.5 dtb notes:
 ----------------
 
-There are six dtbs in path_to_project/export, as follows:
+There are dtbs in path_to_project/export, as follows:
 
-  xilinx-zynq-zynq-mini-itx-adv7511-pcie.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-mini-itx-adv7511.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-zc702-base-trd.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-zc702.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-zc706.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-zed.dtb-WR7.0.0.0_preempt-rt
-  xilinx-zynq-zynq-picozed.dtb-WR7.0.0.0_preempt-rt
+  xilinx-zynq-zynq-zc702-base-trd.dtb-WR8.0.0.0_preempt-rt
+  xilinx-zynq-zynq-zc702.dtb-WR8.0.0.0_preempt-rt
+  xilinx-zynq-zynq-zc706.dtb-WR8.0.0.0_preempt-rt
 
 Which are used to boot the board as the following matches:
 
-  *mini-itx-adv7511-pcie.dtb* for Mini-itx with PCIe enablement.
-  *mini-itx-adv7511.dtb* for Mini-itx without PCIe enablement.
   *zc702-base-trd.dtb* for ZC702 board with TRD validation.
   *zc702.dtb* for ZC702 board without TRD validation.
   *zc706.dtb* for ZC706 board
-  *zed.dtb* for Microzed.
-  *picozed.dtb* for Picozed.
+
+4.1.6 IEEE 1588 PTP Capabilities on Zynq-7000:
+----------------------------------------------
+
+The IEEE 1588 standard describes the protocol which synchronizes the system
+clocks of the different connected devices. Nanosecond level clock sync among
+connected devices is one of the primary requirements for many applications in
+automation, motion control, consumer electronics, Audio Video broadcasting(AVB)
+and telecommunications market segments. Achieving this timing requirement
+requires robust, responsive and error-free design and implementations in both
+software and hardware design.
+
+hardware-transmit (SOF_TIMESTAMPING_TX_HARDWARE)
+hardware-receive (SOF_TIMESTAMPING_RX_HARDWARE)
+hardware-raw-clock (SOF_TIMESTAMPING_RAW_HARDWARE)
+
+Currently, the following PTP ioctls are not implemented:
+PTP_PF_EXTTS,PTP_PF_PEROUT,PTP_EXTTS_REQUEST, PTP_PEROUT_REQUEST, PTP_ENABLE_PPS

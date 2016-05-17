@@ -38,18 +38,40 @@ Source code included in the tree for individual recipes is under the LICENSE
 stated in each recipe (.bb file) unless otherwise stated.
 
 
-2. Board Specific Patches
+2. BSP Kernel and RootFS Combination
+====================================
+
+The validity of WindRiver Linux kernel and RootFS combination for this BSP is
+in the table.
+The leftmost column of the table is the kernel type, and the top line is the
+RootFS type.
+'Y' in each content cell stands for the combination is supported; 'N' stands
+for not supported:
+
+--------------------------------------------------------------------
+| kernel/rootfs | glibc_std | glibc_small | glibc_cgl | glibc_tiny |
+--------------------------------------------------------------------
+|   standard    |     Y     |      Y      |     N     |     N      |
+--------------------------------------------------------------------
+|   preempt_rt  |     Y     |      Y      |     N     |     N      |
+--------------------------------------------------------------------
+
+Note: with regard to the kernel and RootFS type, please refer to WindRiver Linux
+specification for details.
+
+
+3. Board Specific Patches
 =========================
 
 To get a list of patches applied to the kernel specific to this BSP,
 along with patch descriptions, use git to see what changed on the default
 kernel (git whatchanged <kernel_type>..<bsp_name>). For example:
 
-	# cd build/linux-windriver-<version>/linux
+	# cd path_to_project/bitbake_build/tmp/work-shared/bspname/kernel-source
 	# git whatchanged standard/base..HEAD
 
 
-3. Boot Instructions
+4. Boot Instructions
 ====================
 
 It is necessary to load the DTB(device tree blob) into the target's memory
@@ -60,8 +82,7 @@ following commands:
 	# make kds
 	# make zynq-<Board Name>.dtb
 
-Note: <Board Name> can be one of the ZYNQ boards' name, such as zc706, zc702,
-zynq-zed or zynq-mini-itx-adv7511.
+Note: <Board Name> can be one of the ZYNQ boards' name, such as zc706, zc702.
 
 The DTB can then be found in the
   build/linux-windriver/linux-<board>-<kernel type>-build/arch/arm/boot/dts/
@@ -71,7 +92,7 @@ Copy DTB image to MMC/SD or QSPI Flash, and use u-boot's fatload command
 to transfer it to the board before booting along with kernel image.
 
 
-3.1 Boot from MMC/SD card
+4.1 Boot from MMC/SD card
 -------------------------
 
 MMC/SD can be set as the default booting device for this board and two
@@ -82,7 +103,7 @@ created by the fdisk command on the host machine.
 Note: please refer to the README.hardware for further details about the
 switches configuration for setting MMC/SD as the first boot device.
 
-3.1.1 Create two partitions and store the u-boot image
+4.1.1 Create two partitions and store the u-boot image
 ------------------------------------------------------
 (1) Create two partitions on the MMC/SD card.
 
@@ -112,7 +133,7 @@ README for additional details.
 	# umount /mnt/sd
 
 
-3.1.2 Copy kernel image and DTB image to /dev/mmcblk0p1
+4.1.2 Copy kernel image and DTB image to /dev/mmcblk0p1
 -------------------------------------------------------
 
 	# mkdir /mnt/sd
@@ -123,7 +144,7 @@ README for additional details.
 	# umount /mnt/sd
 
 
-3.1.3 Decompress MMC/SD root filesystem
+4.1.3 Decompress MMC/SD root filesystem
 ---------------------------------------
 
 Assuming the second partition is used for the root filesystem, format it
@@ -133,11 +154,11 @@ instance, ext3 and mount it and deploy the root filesystem image there:
 	# mkfs.ext3 /dev/mmcblk0p2
 	# mount /dev/mmcblk0p2 /mnt/sd
 	# cd <buildprj>/export/images/
-	# tar -C /mnt/sd -jxf wrlinux-image-glibc-std-xilinx-zynq.tar.bz2 --numeric-owner
+	# tar -C /mnt/sd -jxf xilinx-zynq-wrlinux-image-glibc-std-<kernel_type>-dist.tar.bz2 --numeric-owner
 	# umount /mnt/sd
 
 
-3.1.4 Boot from MMC/SD card
+4.1.4 Boot from MMC/SD card
 ---------------------------
 
 To boot from MMC/SD card, please use u-boot's commands as follows:
@@ -149,14 +170,14 @@ To boot from MMC/SD card, please use u-boot's commands as follows:
 	# bootm 0x3000000 - 0x2a00000
 
 
-3.2 Boot kernel from QSPI Flash
+4.2 Boot kernel from QSPI Flash
 -------------------------------
 
 Since not all uboot versions support QSPI flash, use
 <build project>layers/wr-bsps/xilinx-zynq/bootloader/boot_mini-itx-pcie.bin
 to ensure that the mini-itx board can boot from QSPI.
 
-3.2.1 QSPI Flash layout
+4.2.1 QSPI Flash layout
 -----------------------
 
 The storage capacity of the QSPI flash on ZYNQ board is 16MB, by default following
@@ -169,15 +190,6 @@ partitions have been created on it:
 	0x620000		0xc00000	qspi-rootfs
 	0xc00000		0x1000000	qspi-bitstream
 
-Note: The Mini-ITX board has a 32MB QSPI flash with the bootloader requiring
-a 16MB partition for BOOT.BIN.
-
-	Start			End		Definition
-	0x0			0x1000000	qspi-fsbl-uboot
-	0x1000000		0x1500000	qspi-linux
-	0x1500000		0x1600000	qspi-device-tree
-	0x1600000		0x2000000	qspi-rootfs
-
 Be extra careful not to touch bootloader partition about FSBL and u-boot. If
 needed, you can alter the layout of the rest of QSPI Flash. In addition, you
 also need to modify the QSPI Flash device node in the below DTB source file to
@@ -188,16 +200,12 @@ reflect such changes accordingly:
 Then re-generate the DTB image as described previously.
 
 
-3.2.2 Save bootloader image to the bootloader partitions
+4.2.2 Save bootloader image to the bootloader partitions
 --------------------------------------------------------
 
 	# mmcinfo
 	# fatload mmc 0 0x100000 BOOT.BIN
 	# sf probe 0
-	For the Mini-ITX board:
-	# sf erase 0 0x1000000
-	# sf write 0x100000 0 ${filesize}
-	Others board:
 	# sf erase 0 0x100000
 	# sf write 0x100000 0 ${filesize}
 
@@ -208,51 +216,36 @@ card, its file size will be automatically recorded in u-boot's "filesize"
 variable, which can be leveraged later.
 
 
-3.2.3 Update DTB to support to boot from QSPI flash
+4.2.3 Update DTB to support to boot from QSPI flash
 ---------------------------------------------------
 
 	# mmcinfo
 	# fatload mmc 0 0x2a00000 devicetree.dtb
 	# sf probe 0
-	For the Mini-ITX board:
-	# sf erase 0x1600000 0x100000
-	# sf write 0x2a00000 0x1600000 ${filesize}
-	Others board:
 	# sf erase 0x600000 0x20000
 	# sf write 0x2a00000 0x600000 ${filesize}
 
 
-3.2.4 Copy kernel image
+4.2.4 Copy kernel image
 -----------------------
 
 	# mmcinfo
 	# fatload mmc 0 0x3000000 uImage
 	# sf probe 0
-	For the Mini-ITX board:
-	# sf erase 0x1100000 0x500000
-	# sf write 0x3000000 0x1100000 ${filesize}
-	Others board:
 	# sf erase 0x100000 0x500000
 	# sf write 0x3000000 0x100000 ${filesize}
 
 
-3.2.5 Booting the kernel image
+4.2.5 Booting the kernel image
 -----------------------------
 
-	For the Mini-ITX board:
-	# sf probe 0
-	# sf read 0x2a00000 0x1600000 0x100000
-	# sf read 0x3000000 0x1100000 0x500000
-	# bootm 0x3000000 - 0x2a00000
-
-	Others board:
 	# sf probe 0
 	# sf read 0x2a00000 0x600000 0x20000
 	# sf read 0x3000000 0x100000 0x500000
 	# bootm 0x3000000 - 0x2a00000
 
 
-3.2.6 Target Note
+4.2.6 Target Note
 -----------------
 
 Since the size of the qspi-rootfs partition is no more than 8MB, unable to
@@ -261,17 +254,17 @@ therefore we cannot deploy jffs2 filesystem on QSPI flash, and the DTB defaults
 to mount the root filesystem from MMC/SD card.
 
 
-3.3 NFS Root File System
+4.3 NFS Root File System
 ------------------------
 
-3.3.1 Prepare NFS and TFTP servers
+4.3.1 Prepare NFS and TFTP servers
 ----------------------------------
 
 The files in above example can be found in <buildprj>/export/images and
 are copied to the directory of the NFS/TFTP server.
 
 
-3.3.2 Boot from NFS root filesystem
+4.3.2 Boot from NFS root filesystem
 -----------------------------------
 
 To boot from NFS rootfs, please use u-boot's commands as follows:
@@ -285,134 +278,155 @@ To boot from NFS rootfs, please use u-boot's commands as follows:
 	# bootm 0x3000000 - 0x2a00000
 
 
-4. Features
+5. Features
 ===========
 
-4.1 USB feature
----------------
-
-4.1.1 Introduction
-------------------
-
-The Xilinx ZYNQ board supports USB OTG, USB host and USB device modes.
-They share one common interface, therefore any mode can only be activated
-exclusively. Jumpers can be used to switch among different modes, please
-refer to README.hardware for the detailed information.
-
-
-4.1.2 Usage and verification
-----------------------------
-
-USB host mode is supported by DTB by default, no extra changes to DTB is
-needed. However, in order to enable other USB modes, DTB needs to be shifted
-accordingly. One convenient approach is to alter it on-line. Alternatively,
-you can directly modify its source code and re-generate a new DTB image.
-
-Refer to the 4.1.3 section of the README.hardware file for jumper settings
-for various USB modes.
-
-1. Enable OTG host mode
-
-Modify dtb for OTG mode in booting step
-
-	# tftp 0x2a00000 devicetree.dtb
-	# fdt addr 0x2a00000
-	# fdt set /amba/ps7-usb dr_mode otg
-
-Plug in a B cable and connect to the host machine to verify the OTG device mode.
-
-Then replace the B cable with the A cable and enable OTG VBUS in linux as follows:
-
-	# cd /sys/devices/amba.0/e0002000.ps7-usb/zynq-otg.0/inputs
-	# echo 1 > a_bus_req
-
-2. Enable USB Device mode
-
-Change the board's DTB source file and modify following line from:
-
-	dr_mode = "host";
-
-to:
-
-	dr_mode = "peripheral";
-
-Then re-generate the DTB image as described previously. Use the new DTB image
-to boot the board and plug in a B cable and connect to the host machine
-to verify the device mode.
-
-
-4.2 PCIE(Mini-ITX)
-------------------
-
-1. Get the BOOT.bin
-
-The Mini-ITX board needs an special BOOT.BIN to support the PCIe support, which can be
-downloaded from the Mini-ITX's website at:
-
-http://zedboard.org/support/design/2056/17
-
-Or
-
-${build project}/layers/wr-bsps/xilinx-zynq/bootloader/
-
-2. Setting the jumper
-
-	JP1  1-2
-	JP7  3-4
-	JP12 2-3
-
-3. Enter the following command to copy the BOOT.bin image to the SD/MMC card:
-
-	$ sudo cp -rf boot_mini-itx-pcie.bin /mnt/sd/boot.bin
-
-4. Using uImage-zynq-mini-itx-adv7511-pcie.dtb for the boot dtb
-
-
-4.3 RTC, Audio for mini-itx
+5.1 DRM HDMI display on TRD
 ---------------------------
 
-Please refer to bootloader/README
+5.1.1 Introduction
+------------------
+
+The Base TRD is an embedded video processing application designed to showcase
+capabilities of the Zynq Z-7020 AP SoC device for the embedded domain. The Base
+TRD consists of two elements: The Zynq-7000 AP SoC Processing System (PS) and a
+video processing pipeline implemented in Programmable Logic (PL).
 
 
-4.4 Audio
----------
+5.1.2 Usage and verification
+----------------------------
 
-4.4.1 Audio playback(ADAU1761)
-------------------------------
+Filesystem with glibc-std-sato is used to start matchbox on HDMI monitor, so
+the following rootfs parameter should be set:
+        --enable-rootfs=glibc-std-sato
 
-Headphone out:
-	# amixer cset name='Headphone Playback Volume' 57,57 -c1
-	# amixer cset name='DAC Playback Mux' 0 -c1
-	# amixer cset name='Right Playback Mixer Left DAC Switch' 1 -c1
-	# amixer cset name='Right Playback Mixer Right DAC Switch' 1 -c1
-	# amixer cset name='Left Playback Mixer Left DAC Switch' 1 -c1
-	# amixer cset name='Left Playback Mixer Right DAC Switch' 1 -c1
-        # speaker-test -c2 -twav -Dplughw:ADAU1761
+Please refer to bootloader/README for more information
 
-Line out:
 
-	# amixer cset name='DAC Playback Mux' 0 -c1
-	# amixer cset name='Right Playback Mixer Left DAC Switch' 1 -c1
-	# amixer cset name='Right Playback Mixer Right DAC Switch' 1 -c1
-	# amixer cset name='Left Playback Mixer Left DAC Switch' 1 -c1
-	# amixer cset name='Left Playback Mixer Right DAC Switch' 1 -c1
-	# amixer cset name='Left LR Playback Mixer Left Volume' 2 -c1
-	# amixer cset name='Left LR Playback Mixer Right Volume' 2 -c1
-	# amixer cset name='Right LR Playback Mixer Left Volume' 2 -c1
-	# amixer cset name='Right LR Playback Mixer Right Volume' 2 -c1
-	# amixer cset name='Lineout Playback Volume' 57,57 -c1
-	# speaker-test -c2 -twav -Dplughw:ADAU1761
+5.2 Coresight operations on Xilinx-7000 series:
+----------------------------------------------
 
-Note:
+5.2.1 Introduction
+------------------
 
-There are two items for DAC Playback, make sure AIFIN for both above.
+ARM CoreSight architecture defines four classes of CoreSight components:
+access and control, trace source, trace link, and trace sink. Components
+of the access and control class provide a user interface to access the
+debug infrastructure through memory-mapped locations and JTAG(not involved).
 
-4.4.2 Audio HDMI playback
+The Xilinx 7000 series PS and PL can be debugged together as a complete
+system using intrusive and non-intrusive debug techniques. And this test
+and debug capability is based on ARM CoreSight Architecture Specification
+and consists mostly of ARM-supplied components, but also includes one
+Xilinx-supplied component (FTM Programmable Logic Test and Debug).
+
+Coresight enablement with the following when project configuration
+
+--enable-kernel=type+features/coresight
+
+5.2.2 Usage and verification
+----------------------------
+
+root@QZ706:~#
+root@QZ706:~# cd /sys/bus/coresight/devices
+root@QZ706:/sys/bus/coresight/devices# ls
+amba:replicator  f8803000.tpiu	  f889c000.ptm
+f8801000.etb	 f8804000.funnel  f889d000.ptm
+root@QZ706:/sys/bus/coresight/devices#
+root@QZ706:/sys/bus/coresight/devices# echo 1 > f8801000.etb/enable_sink
+root@QZ706:/sys/bus/coresight/devices# cd f889c000.ptm
+root@QZ706:/sys/bus/coresight/devices/f889c000.ptm# ls
+addr_acctype  cntr_rld_event  etmsr	      seq_12_event    subsystem
+addr_idx      cntr_rld_val    fifofull_level  seq_13_event    sync_freq
+addr_range    cntr_val	      mode	      seq_21_event    timestamp_event
+addr_single   ctxid_idx       nr_addr_cmp     seq_23_event    traceid
+addr_start    ctxid_mask      nr_cntr	      seq_31_event    trigger_event
+addr_stop     ctxid_pid       nr_ctxid_cmp    seq_32_event    uevent
+cntr_event    enable_event    power	      seq_curr_state
+cntr_idx      enable_source   reset	      status
+root@QZ706:/sys/bus/coresight/devices/f889c000.ptm# echo 1 > enable_source
+coresight-etb10 f8801000.etb: ETB enabled
+coresight-replicator amba:replicator: REPLICATOR enabled
+coresight-funnel f8804000.funnel: FUNNEL inport 0 enabled
+coresight-etm3x f889c000.ptm: ETM tracing enabled
+root@QZ706:/sys/bus/coresight/devices/f889c000.ptm# cd ../f8801000.etb
+root@QZ706:/sys/bus/coresight/devices/f8801000.etb# cat status
+Depth:		0x400
+Status:		0x1
+RAM read ptr:	0x0
+RAM wrt ptr:	0x82                <--- changed everytime when cat status
+Trigger cnt:	0x0
+Control:	0x1
+Flush status:	0x0
+Flush ctrl:	0x2001
+root@QZ706:/sys/bus/coresight/devices/f8801000.etb# cat status
+Depth:		0x400
+Status:		0x1
+RAM read ptr:	0x0
+RAM wrt ptr:	0x1d9               <--- changed everytime when cat status
+Trigger cnt:	0x0
+Control:	0x1
+Flush status:	0x0
+Flush ctrl:	0x2001
+root@QZ706:~# cd
+root@QZ706:~# dd if=/dev/f8801000.etb of=etb
+dd if=/dev/f8801000.etb of=etb
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+coresight-etb10 f8801000.etb: ETB dumped
+8+0 records in
+8+0 records out
+4096 bytes (4.1 kB) copied, 0.0466603 s, 87.8 kB/s
+root@QZ706:~#
+
+Please refer to Documentation/trace/coresight.txt for more information
+
+
+5.3 IEEE 1588 PTP testing
 -------------------------
 
-Connect the board and a HDMI display with a HDMI cable,
-then enable fbdev HDMI.
 
-Play the recorded audio messages:
+5.3.1 Introduction
+------------------
 
-        # speaker-test -c2 -twav
+This testing method is based on Linux PTP project, which provides a robust
+implementation of the standard and to use the most relevant and modern API
+offered by the Linux kernel. And only some basic testing commands are done
+on this BSP because the accurate PTP testing scenario is a bit complicated
+according to IEEE PTPv2.
+
+5.3.2 Usage and verification
+----------------------------
+
+Two boards are necessary for this case, one for master, another is slave,
+the following commands show to use PTP time as stamping mode based on the
+peer delay (P2P) mechanism:
+
+     master :
+     root@128:/# ptp4l -i eth0 -m -P
+     ptp4l[74.527]: selected /dev/ptp0 as PTP clock
+     ptp4l[74.541]: driver changed our HWTSTAMP options
+     ptp4l[74.541]: tx_type   1 not 1
+     ptp4l[74.541]: rx_filter 1 not 12
+     ptp4l[74.542]: port 1: INITIALIZING to LISTENING on INITIALIZE
+     ptp4l[74.546]: port 0: INITIALIZING to LISTENING on INITIALIZE
+     ptp4l[81.917]: port 1: LISTENING to MASTER on ANNOUNCE_RECEIPT_TIMEOUT_EXPIRES
+     ptp4l[81.917]: selected best master clock 000a35.fffe.000120
+     ptp4l[81.917]: assuming the grand master role
+
+     slave:
+     root@128:/# ptp4l -i eth0 -s -m -P &
+     ptp4l[74.527]: selected /dev/ptp0 as PTP clock
+     ptp4l[4059.640]: selected /dev/ptp0 as PTP clock
+     ptp4l[4059.643]: driver changed our HWTSTAMP options
+     ptp4l[4059.643]: tx_type   1 not 1
+     ptp4l[4059.643]: rx_filter 1 not 12
+     ptp4l[4059.643]: port 1: INITIALIZING to LISTENING on INITIALIZE
+     ptp4l[4059.644]: port 0: INITIALIZING to LISTENING on INITIALIZE
+     ptp4l[4066.659]: selected best master clock 000a35.fffe.000122
