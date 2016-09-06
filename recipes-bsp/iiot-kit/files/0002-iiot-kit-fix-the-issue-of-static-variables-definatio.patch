@@ -1,0 +1,69 @@
+From b82c7977520aa622dc1fd0e71d4590ad5ea97af5 Mon Sep 17 00:00:00 2001
+From: fli <fupan.li@windriver.com>
+Date: Wed, 7 Sep 2016 03:35:29 -0700
+Subject: [PATCH 2/2] iiot-kit: fix the issue of static variables defination
+
+Signed-off-by: fli <fupan.li@windriver.com>
+---
+ IIoT_Kit/Maxim_31855_Pmod/Linux/PmodUtilities.h |  6 ++++++
+ IIoT_Kit/Maxim_31855_Pmod/Linux/maxim.c         | 10 +++++-----
+ IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855.c    |  3 ++-
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/IIoT_Kit/Maxim_31855_Pmod/Linux/PmodUtilities.h b/IIoT_Kit/Maxim_31855_Pmod/Linux/PmodUtilities.h
+index 5e20171..137a2d3 100644
+--- a/IIoT_Kit/Maxim_31855_Pmod/Linux/PmodUtilities.h
++++ b/IIoT_Kit/Maxim_31855_Pmod/Linux/PmodUtilities.h
+@@ -56,4 +56,10 @@ int readMaxim31855(int fd);
+ int SPI_Init();
+ int SPI_Close(int fd);
+ 
++extern char *device;
++extern uint8_t mode; 
++extern uint8_t bits;
++extern uint32_t speed;  
++extern uint16_t delay;
++
+ #endif
+diff --git a/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim.c b/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim.c
+index 2bfa4b9..4ca0a9d 100644
+--- a/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim.c
++++ b/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim.c
+@@ -51,11 +51,11 @@
+ }
+ */
+ 
+-static const char *device = "/dev/spidev0.0";   		// Default 
+-static uint8_t mode = SPI_CPHA;						// Xilinx PL SPI IP requires a clock phase shift to align the data
+-static uint8_t bits = 8;
+-static uint32_t speed = 3125000;					// Maximum speed for the Xilinx PL SPI IP, as confgured in Vivado
+-static uint16_t delay;
++char *device = "/dev/spidev0.0";   		// Default 
++uint8_t mode = SPI_CPHA;						// Xilinx PL SPI IP requires a clock phase shift to align the data
++uint8_t bits = 8;
++uint32_t speed = 3125000;					// Maximum speed for the Xilinx PL SPI IP, as confgured in Vivado
++uint16_t delay;
+ 
+ static void print_usage(const char *prog)
+ {
+diff --git a/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855.c b/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855.c
+index ad6fb0d..e703a01 100644
+--- a/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855.c
++++ b/IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855.c
+@@ -50,11 +50,12 @@ static void pabort(const char *s)
+ }
+ 
+ //static const char *device = "/dev/spidev32766.0";   // Default for PetaLinux
+-static const char *device = "/dev/spidev0.0";   	// Default for Pulsar 7
++/*static const char *device = "/dev/spidev0.0";   	// Default for Pulsar 7
+ static uint8_t mode = SPI_CPHA;						// Xilinx PL SPI IP requires a clock phase shift to align the data
+ static uint8_t bits = 8;
+ static uint32_t speed = 3125000;					// Maximum speed for the Xilinx PL SPI IP, as confgured in Vivado
+ static uint16_t delay;
++*/
+ 
+ int readMaxim31855(int fd)
+ {
+-- 
+2.9.3
+
