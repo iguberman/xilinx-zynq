@@ -8,6 +8,7 @@ do_configure[noexec] = "1"
 SRC_URI = "git://github.com/Avnet/software.git \
 	   file://0001-iiot-kit-fix-the-issue-of-host-cross-building.patch  \
 	   file://0002-iiot-kit-fix-the-issue-of-static-variables-definatio.patch \
+	   file://0003-iiot-demo-fix-the-cross-building-issue.patch \
 	   "
 SRCREV = "5a96dd29be3ab7ed308ee8d2504c08d5406299cf"
 
@@ -16,12 +17,16 @@ S = "${WORKDIR}/git"
 do_compile () {
     oe_runmake -C IIoT_Kit/STM_HTS221/Linux 
     oe_runmake -C IIoT_Kit/Maxim_31855_Pmod/Linux
+    oe_runmake -C IIoT_Kit/IIoT_Bluemix_Demo
+    oe_runmake -C IIoT_Kit/IIoT_Quickstart_Demo
 }
 
 do_install () {
     install -d ${D}/opt/iiot-demo
     install -m 0755 IIoT_Kit/STM_HTS221/Linux/hts221_sensor ${D}/opt/iiot-demo/
     install -m 0755 IIoT_Kit/Maxim_31855_Pmod/Linux/maxim31855_sensor ${D}/opt/iiot-demo/
+    install -m 0755 IIoT_Kit/IIoT_Bluemix_Demo/IIoT_Bluemix_Demo ${D}/opt/iiot-demo/
+    install -m 0755 IIoT_Kit/IIoT_Quickstart_Demo/IIoT_QuickStart_Demo ${D}/opt/iiot-demo/
 }
 
 FILES_${PN} += "/opt"

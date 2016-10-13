@@ -1,0 +1,84 @@
+From 3bef11a3c7264b86d2aa1abbdd1725b2c9c73295 Mon Sep 17 00:00:00 2001
+From: fli <fupan.li@windriver.com>
+Date: Thu, 13 Oct 2016 02:56:59 -0700
+Subject: [PATCH] iiot-demo: fix the cross building issues
+
+Signed-off-by: fli <fupan.li@windriver.com>
+---
+ IIoT_Kit/IIoT_Bluemix_Demo/makefile         | 3 +--
+ IIoT_Kit/IIoT_Bluemix_Demo/paho/makefile    | 8 +++-----
+ IIoT_Kit/IIoT_Quickstart_Demo/makefile      | 3 +--
+ IIoT_Kit/IIoT_Quickstart_Demo/paho/makefile | 8 +++-----
+ 4 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/IIoT_Kit/IIoT_Bluemix_Demo/makefile b/IIoT_Kit/IIoT_Bluemix_Demo/makefile
+index fcfcb1b..4436736 100644
+--- a/IIoT_Kit/IIoT_Bluemix_Demo/makefile
++++ b/IIoT_Kit/IIoT_Bluemix_Demo/makefile
+@@ -1,5 +1,4 @@
+-CC = gcc
+-CFLAGS =
++CC ?= gcc
+ OUT = IIoT_Bluemix_Demo
+ SRCS := $(wildcard *.c)
+ OBJS := ${SRCS:.c=.o}
+diff --git a/IIoT_Kit/IIoT_Bluemix_Demo/paho/makefile b/IIoT_Kit/IIoT_Bluemix_Demo/paho/makefile
+index b18edcd..455e696 100644
+--- a/IIoT_Kit/IIoT_Bluemix_Demo/paho/makefile
++++ b/IIoT_Kit/IIoT_Bluemix_Demo/paho/makefile
+@@ -1,7 +1,5 @@
+-CC = gcc
+-CFLAGS =
+-AR = ar
+-AROPTS = rcs
++CC ?= gcc
++AR ?= ar
+ OUT = libpaho.a
+ SRCS := $(wildcard *.c)
+ OBJS := ${SRCS:.c=.o}
+@@ -9,7 +7,7 @@ DEPS := $(wildcard *.h)
+ 
+ 
+ $(OUT): $(OBJS)
+-	$(AR) $(AROPTS) $@ $^
++	$(AR) rcs $@ $^
+ 
+ %.o: %.c $(DEPS)
+ 	$(CC) $(CFLAGS) -c $< -o $@
+diff --git a/IIoT_Kit/IIoT_Quickstart_Demo/makefile b/IIoT_Kit/IIoT_Quickstart_Demo/makefile
+index 2e43b92..6b6a31a 100644
+--- a/IIoT_Kit/IIoT_Quickstart_Demo/makefile
++++ b/IIoT_Kit/IIoT_Quickstart_Demo/makefile
+@@ -1,5 +1,4 @@
+-CC = gcc
+-CFLAGS =
++CC ?= gcc
+ OUT = IIoT_QuickStart_Demo
+ SRCS := $(wildcard *.c)
+ OBJS := ${SRCS:.c=.o}
+diff --git a/IIoT_Kit/IIoT_Quickstart_Demo/paho/makefile b/IIoT_Kit/IIoT_Quickstart_Demo/paho/makefile
+index b18edcd..455e696 100644
+--- a/IIoT_Kit/IIoT_Quickstart_Demo/paho/makefile
++++ b/IIoT_Kit/IIoT_Quickstart_Demo/paho/makefile
+@@ -1,7 +1,5 @@
+-CC = gcc
+-CFLAGS =
+-AR = ar
+-AROPTS = rcs
++CC ?= gcc
++AR ?= ar
+ OUT = libpaho.a
+ SRCS := $(wildcard *.c)
+ OBJS := ${SRCS:.c=.o}
+@@ -9,7 +7,7 @@ DEPS := $(wildcard *.h)
+ 
+ 
+ $(OUT): $(OBJS)
+-	$(AR) $(AROPTS) $@ $^
++	$(AR) rcs $@ $^
+ 
+ %.o: %.c $(DEPS)
+ 	$(CC) $(CFLAGS) -c $< -o $@
+-- 
+2.9.3
+
